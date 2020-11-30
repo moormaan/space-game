@@ -6,6 +6,7 @@ import (
 	_ "image/png"
 	"log"
 	"time"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -19,6 +20,10 @@ type Game struct {
 
 var game Game
 var shipImg *ebiten.Image
+var (
+	ScreenWidth  = 1600
+	ScreenHeight = 900
+)
 
 func init() {
 	var err error
@@ -35,6 +40,9 @@ func (g *Game) Update() error {
 	elapsed := float64(newTime.Sub(g.lastUpdateTime)) / 3000000000
 	g.lastUpdateTime = newTime
 	g.angle = g.angle + elapsed
+	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		os.Exit(0)
+	}
 	return nil
 }
 
@@ -52,26 +60,27 @@ func (g *Game) DrawCursor(screen *ebiten.Image) {
 func (g *Game) Draw(screen *ebiten.Image) {
 	x, y := ebiten.CursorPosition()
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f\n"+
-		"x:%d y:%d\n"+
-		"Enter:%t", ebiten.CurrentFPS(), x, y, ebiten.IsKeyPressed(ebiten.KeyEnter)))
+		"x:%d y:%d\n", ebiten.CurrentFPS(), x, y))
 
 	g.DrawCursor(screen)
 	shipGeom := ebiten.GeoM{}
+	shipGeom.Translate(-float64(shipImg.Bounds().Dx())/2, -float64(shipImg.Bounds().Dy())/2)
 	shipGeom.Rotate(g.angle)
 	shipGeom.Scale(0.2, 0.2)
-	shipGeom.Translate(float64(x), float64(y))
+	//shipGeom.Translate(float64(x), float64(y))
+	shipGeom.Translate(float64(ScreenWidth)/2, float64(ScreenHeight)/2)
 	shipOpts := &ebiten.DrawImageOptions{GeoM: shipGeom}
 	screen.DrawImage(shipImg, shipOpts)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 640, 480
+	return ScreenWidth, ScreenHeight
 }
 
 func main() {
 	// ebiten.SetWindowSize(640, 480)
 	ebiten.SetFullscreen(true)
-	ebiten.SetWindowTitle("Hello, World!")
+	ebiten.SetWindowTitle("Space battle!")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
